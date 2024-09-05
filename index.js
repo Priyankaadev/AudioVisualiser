@@ -45,8 +45,8 @@ function visualize(audioBuffer) {
    for (let i = 0; i < numberOfChunks; i++) {
       const chunk = channelData.slice(i * chunkSize, (i + 1)*chunkSize ) 
       
-      const min = Math.min(...chunk)
-      const max = Math.max(...chunk) 
+      const min = Math.min(...chunk)* 20
+      const max = Math.max(...chunk) * 20
       // console.log(min, max);
        
       canvasContext.fillRect(

@@ -12,7 +12,7 @@ document.getElementById( 'audio')
 
        audioContext.decodeAudioData(arrayBuffer, (audioBuffer)=>{
          // console.log(audioBuffer);
-         visualize(audioBuffer) 
+         visualize(audioBuffer, audioContext) 
        })
     })
 
@@ -20,42 +20,49 @@ document.getElementById( 'audio')
     
 } )
 
-function visualize(audioBuffer) {
+function visualize(audioBuffer, audioContext) { 
    const canvas = document.getElementById('canvas');
    canvas.width = 800;
    canvas.height = 200;
 
+   const analyser = audioContext.createAnalyser()
+   analyser.fftSize = 256
 
+   const frequencyBufferLength = analyser.frequencyBinCount
+   // console.log(analyser.frequencyBinCount);
+   const frequencyData = new Uint8Array(frequencyBufferLength)
+   
+   const source = audioContext.createBufferSource();
+   source.buffer = audioBuffer
+   source.connect(analyser)
+   analyser.connect(audioContext.destination)
+   source.start()
 
    const canvasContext = canvas.getContext('2d') 
-
-   const channelData = audioBuffer.getChannelData(0) 
-   // console.log(channelData);
-
-   const numberOfChunks = 400;
-   const chunkSize = Math.ceil(channelData.length / numberOfChunks);
-
+      
    canvasContext.fillStyle = '#2633ed'
    // console.log(canvas.width, canvas.height);
 
-   const center = canvas.height/2;
-   const barWidth = canvas.width / numberOfChunks
-   
+   const barWidth = canvas.width / frequencyBufferLength
 
-   for (let i = 0; i < numberOfChunks; i++) {
-      const chunk = channelData.slice(i * chunkSize, (i + 1)*chunkSize ) 
+   setInterval(() => {
+      canvasContext.clearRect(0, 0, canvas.width, canvas.height)
       
-      const min = Math.min(...chunk)* 20
-      const max = Math.max(...chunk) * 20
-      // console.log(min, max);
-       
-      canvasContext.fillRect(
-         i*barWidth,
-         center-max,
-         barWidth,
-         max + Math.abs(min)
-      )
-   }
+      analyser.getByteFrequencyData(frequencyData)
+   //   console.log(frequencyData);
+   
+      for (let i = 0; i < frequencyBufferLength; i++) {
+               
+         canvasContext.fillRect(
+            i*barWidth,
+            canvas.height - frequencyData[i],
+            barWidth,
+            frequencyData[i]
+         )
+      }
+   }, 100);
+
+  
 
    
 }

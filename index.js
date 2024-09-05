@@ -1,29 +1,29 @@
-document.getElementById( 'audio')
-   .addEventListener('change', ( event)=>{
-    
-    const file = event.target.files[0]
-    
-    const reader = new FileReader();
+document.getElementById('audio')
+   .addEventListener('change', (event) => {
 
-    reader.addEventListener('load', (event)=>{
-       const arrayBuffer = event.target.result
-        
-       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const file = event.target.files[0]
 
-       audioContext.decodeAudioData(arrayBuffer, (audioBuffer)=>{
-         // console.log(audioBuffer);
-         visualize(audioBuffer, audioContext) 
-       })
-    })
+      const reader = new FileReader();
 
-    reader.readAsArrayBuffer(file)   
-    
-} )
+      reader.addEventListener('load', (event) => {
+         const arrayBuffer = event.target.result
 
-function visualize(audioBuffer, audioContext) { 
+         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+         audioContext.decodeAudioData(arrayBuffer, (audioBuffer) => {
+            // console.log(audioBuffer);
+            visualize(audioBuffer, audioContext)
+         })
+      })
+
+      reader.readAsArrayBuffer(file)
+
+   })
+
+function visualize(audioBuffer, audioContext) {
    const canvas = document.getElementById('canvas');
-   canvas.width = 800;
-   canvas.height = 200;
+   canvas.width = canvas.clientWidth;
+   canvas.height = 300;
 
    const analyser = audioContext.createAnalyser()
    analyser.fftSize = 256
@@ -31,38 +31,40 @@ function visualize(audioBuffer, audioContext) {
    const frequencyBufferLength = analyser.frequencyBinCount
    // console.log(analyser.frequencyBinCount);
    const frequencyData = new Uint8Array(frequencyBufferLength)
-   
+
    const source = audioContext.createBufferSource();
    source.buffer = audioBuffer
    source.connect(analyser)
    analyser.connect(audioContext.destination)
    source.start()
 
-   const canvasContext = canvas.getContext('2d') 
-      
-   canvasContext.fillStyle = '#2633ed'
+   const canvasContext = canvas.getContext('2d')
+   
    // console.log(canvas.width, canvas.height);
 
    const barWidth = canvas.width / frequencyBufferLength
 
-   setInterval(() => {
-      canvasContext.clearRect(0, 0, canvas.width, canvas.height)
+
+
+   function draw() {
+      requestAnimationFrame(draw)
+      canvasContext.fillStyle = '#a8f50f'
+      canvasContext.fillRect(0,0, canvas.width, canvas.height)
       
+
       analyser.getByteFrequencyData(frequencyData)
-   //   console.log(frequencyData);
-   
+      //   console.log(frequencyData);
+
       for (let i = 0; i < frequencyBufferLength; i++) {
-               
+      canvasContext.fillStyle = `rgba(82, 100, 305, ${frequencyData[i]  / 255})`
          canvasContext.fillRect(
-            i*barWidth,
+            i * barWidth,
             canvas.height - frequencyData[i],
-            barWidth,
+            barWidth-1,
             frequencyData[i]
          )
       }
-   }, 100);
-
-  
-
-   
+   }
+   draw()
 }
+
